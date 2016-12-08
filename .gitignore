@@ -1,0 +1,12 @@
+
+*~
+*.o
+*.out
+*.a
+*.lo
+*.so
+*.la
+.libs
+filter
+
+
