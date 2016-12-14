@@ -75,6 +75,7 @@
 #include "filter.h"
 #include "syntax-tree.h"
 #include "grammar.h"
+#include "proto.h"
 
 #ifdef _WIN32
 /* disable Windows VC compiler warning "signed/unsigned mismatch" associated  */
@@ -93,6 +94,7 @@
 /*#undef YY_NO_UNPUT*/
 
 static int set_lval(int token, void* data);
+static int set_lval_int(dfwork_t *dfw, int token, char *s);
 static int simple(int token);
 static gboolean str_to_gint32(dfwork_t *dfw, char *s, int* pint);
 static void mark_lval_deprecated(const char *s);
@@ -211,7 +213,13 @@ static void mark_lval_deprecated(const char *s);
 	g_string_append(yyextra->quoted_string, yytext);
 }
 
+0[xX][0-9a-fA-F]+            {
+    return set_lval_int(yyextra->dfw, TOKEN_INTEGER, yytext);
+}
 
+[0-9]+                           {
+    return set_lval_int(yyextra->dfw, TOKEN_INTEGER, yytext);
+}
 
 [-[:alnum:]_\.:]*\/[[:digit:]]+  {
         /* CIDR */
@@ -219,7 +227,17 @@ static void mark_lval_deprecated(const char *s);
 }
 
 [-\+[:alnum:]_.:]+	{
-	return set_lval(TOKEN_FIELD, yytext);
+    gboolean exist = FALSE;
+    exist = protoExist(yytext);
+    if(exist)
+    {
+        return set_lval(TOKEN_FIELD, yytext);
+    }
+    else
+    {
+        return set_lval(TOKEN_STRING, yytext);
+    }
+	
 }
 
 . {
@@ -273,6 +291,27 @@ set_lval(int token, gpointer data)
 	return token;
 }
 
+static int
+set_lval_int(dfwork_t *dfw, int token, char *s)
+{
+	sttype_id_t	type_id = STTYPE_UNINITIALIZED;
+	gint32		val;
+
+	if (!str_to_gint32(dfw, s, &val)) {
+		return SCAN_FAILED;
+	}
+
+	switch (token) {
+		case TOKEN_INTEGER:
+			type_id = STTYPE_INTEGER;
+			break;
+		default:
+			g_assert_not_reached();
+	}
+
+	stnode_init_int(tf_lval, type_id, val);
+	return token;
+}
 
 static gboolean
 str_to_gint32(dfwork_t *dfw, char *s, int* pint)

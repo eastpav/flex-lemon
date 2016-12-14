@@ -3,14 +3,17 @@ CFLAGS := $(CFLAGS) -std=c99 -g
 CFLAGS  += `pkg-config --cflags glib-2.0`
 LDFLAGS := `pkg-config --libs glib-2.0`
 
-filter: filter.o scanner.o grammar.o sttype-test.o syntax-tree.o
-	$(CC)  filter.o scanner.o grammar.o sttype-test.o syntax-tree.o $(LDFLAGS) -o filter 
+filter: filter.o scanner.o grammar.o sttype-test.o syntax-tree.o proto.o semcheck.o
+	$(CC)  filter.o scanner.o grammar.o sttype-test.o syntax-tree.o proto.o semcheck.o $(LDFLAGS) -o filter 
 
 filter.o: filter.c grammar.h grammar.h scanner.h
 
 sttype-test.o: sttype-test.h sttype-test.c
 
 syntax-tree.o: syntax-tree.h syntax-tree.c
+
+proto.o: proto.h proto.c
+semcheck.o: semcheck.h semcheck.c
 
 grammar.o: grammar.h grammar.c
 

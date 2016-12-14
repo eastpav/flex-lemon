@@ -52,7 +52,6 @@
 /* This is called as soon as a syntax error happens. After that, 
 any "error" symbols are shifted, if possible. */
 %syntax_error {
-
 	if (!TOKEN) {
 		tfilter_fail(dfw, "Unexpected end of filter string.");
 		dfw->syntax_error = TRUE;
@@ -77,7 +76,9 @@ any "error" symbols are shifted, if possible. */
 		case STTYPE_FIELD:
 			tfilter_fail(dfw, "Syntax error near \"%s\".", (char *)stnode_data(TOKEN));
 			break;
-		
+        case STTYPE_INTEGER:
+		    tfilter_fail(dfw, "The integer %d was unexpected in this context.", stnode_value(TOKEN));
+			break;
 
 		/* These aren't handed to use as terminal tokens from
 		   the scanner, so was can assert that we'll never
@@ -139,6 +140,7 @@ logical_test(T) ::= entity(E).
 entity(E) ::= FIELD(F).		{ E = F; }
 entity(E) ::= STRING(S).	{ E = S; }
 entity(E) ::= UNPARSED(U).	{ E = U; }
+entity(E) ::= INTEGER(I).	{ E = I; }
 
 
 /* Relational tests */
